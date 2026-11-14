@@ -1,0 +1,896 @@
+<title>纽约警笛听诊器</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a listening console. Full-height map on the right, an EMS dispatch-console style panel on the left; stacks map-over-panel on phones. */
+:root {
+  --bg: #eef2f5;
+  --panel: #f7f9fb;
+  --land: #ffffff;
+  --water: #cfdbe4;
+  --ink: #15202b;
+  --muted: #5a6875;
+  --line: #c9d3db;
+  --siren: #d3263a;
+  --strobe: #2457e6;
+  --ok: #1f7a4d;
+  --f-display: "Barlow Condensed", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1319; --panel: #111921; --land: #1f2b37; --water: #080c10; --ink: #e4ebf1;
+    --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1319; --panel: #111921; --land: #1f2b37; --water: #080c10; --ink: #e4ebf1;
+  --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.app { height: 100%; display: grid; grid-template-columns: minmax(320px, 380px) 1fr; }
+.panel {
+  background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; min-width: 0;
+  padding-block: 22px 28px;
+  padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: 20px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.map { position: relative; min-width: 0; background: var(--water); overflow: hidden; }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; display: block; }
+#map:focus-visible { outline: 2px solid var(--strobe); outline-offset: -2px; }
+
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 40px; line-height: 1; margin: 6px 0 8px; letter-spacing: .01em; text-wrap: balance; }
+h1 .x { color: var(--siren); }
+.lede { margin: 0; color: var(--muted); max-width: 34em; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: .04em; margin: 0 0 8px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 small { font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--muted); text-transform: none; letter-spacing: 0; }
+section { display: flex; flex-direction: column; gap: 10px; }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* transport */
+.transport { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+#play {
+  width: 64px; height: 64px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--siren); color: #fff; display: grid; place-items: center;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--siren) 45%, transparent);
+}
+#play[aria-pressed="true"] { animation: beacon 1.2s ease-out infinite; }
+#play:focus-visible { outline: 3px solid var(--strobe); outline-offset: 3px; }
+#play svg { width: 26px; height: 26px; }
+@keyframes beacon { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--siren) 50%, transparent); } 100% { box-shadow: 0 0 0 18px transparent; } }
+.clock { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.clock .day { font-size: 12px; color: var(--muted); }
+.clock .time { font-family: var(--f-mono); font-size: 30px; font-weight: 500; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; }
+.seg button { font: 500 12px var(--f-mono); padding: 5px 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.seg button:focus-visible { outline: 2px solid var(--strobe); outline-offset: -2px; }
+.speedrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.speedrow span { font-size: 12px; color: var(--muted); }
+.timeline { position: relative; height: 54px; }
+#spark { position: absolute; inset: 0 0 16px 0; width: 100%; height: 38px; }
+#scrub { position: absolute; left: 0; right: 0; top: 0; width: 100%; margin: 0; height: 38px; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+#scrub::-webkit-slider-runnable-track { height: 38px; background: transparent; }
+#scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 38px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); border: 2px solid var(--ink); cursor: grab; }
+#scrub:active::-webkit-slider-thumb { cursor: grabbing; }
+#scrub::-moz-range-track { height: 38px; background: transparent; }
+#scrub::-moz-range-thumb { width: 8px; height: 34px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); border: 2px solid var(--ink); cursor: grab; }
+#scrub:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--strobe); outline-offset: 2px; }
+#scrub:focus-visible::-moz-range-thumb { outline: 2px solid var(--strobe); outline-offset: 2px; }
+.tlhead { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--muted); }
+.jump { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.jump select, .jump input { font: 500 13px var(--f-mono); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+.jump select:focus-visible, .jump input:focus-visible { outline: 2px solid var(--strobe); outline-offset: 1px; }
+.jump .pre { display: flex; gap: 4px; flex-wrap: wrap; }
+.jump .pre button { font: 500 11px var(--f-mono); padding: 4px 7px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.jump .pre button:hover { color: var(--ink); border-color: var(--muted); }
+.jump .pre button:focus-visible { outline: 2px solid var(--strobe); outline-offset: 1px; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); font: 10px var(--f-mono); color: var(--muted); position: absolute; left: 0; right: 0; bottom: 0; }
+.days span { padding-left: 2px; border-left: 1px solid var(--line); }
+
+/* meter */
+.meter { position: relative; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--muted) 18%, transparent); overflow: hidden; }
+.meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--ok), #d9a515 55%, var(--siren) 80%); transition: width .15s linear; }
+.ticks { position: relative; height: 26px; font: 10px var(--f-mono); color: var(--muted); }
+.ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; text-align: center; line-height: 1.25; }
+.readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.readout div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.readout b { font-family: var(--f-mono); font-weight: 500; font-size: 20px; font-variant-numeric: tabular-nums; }
+.readout span { font-size: 11px; color: var(--muted); }
+
+/* week stats */
+.big { font-family: var(--f-display); font-size: 44px; font-weight: 700; line-height: 1; }
+.big small { font-family: var(--f-body); font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.statline { color: var(--muted); font-size: 13px; margin: 0; }
+.statline b { color: var(--ink); font-weight: 600; }
+#hours { width: 100%; height: 64px; display: block; }
+.pct { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.pct .bar { flex: 1; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--muted) 18%, transparent); position: relative; }
+.pct .bar i { position: absolute; top: -4px; width: 3px; height: 14px; background: var(--siren); border-radius: 1px; transform: translateX(-50%); }
+
+/* ticker */
+#ticker { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: 12.5px; }
+#ticker li { display: grid; grid-template-columns: 58px 1fr auto; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); align-items: baseline; }
+#ticker li:last-child { border-bottom: 1px solid var(--line); }
+#ticker .t { font-family: var(--f-mono); color: var(--muted); }
+#ticker .what { min-width: 0; }
+#ticker .code { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-right: 4px; }
+#ticker .sev { font-family: var(--f-mono); font-size: 11px; padding: 0 5px; border-radius: 3px; color: #fff; background: var(--siren); margin-left: 4px; }
+#ticker .sev.s2 { background: color-mix(in srgb, var(--siren) 75%, var(--muted)); }
+#ticker .d { font-family: var(--f-mono); color: var(--muted); }
+#ticker .empty { color: var(--muted); grid-template-columns: 1fr; }
+
+/* settings */
+.settings { display: grid; gap: 10px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+.toggle input { width: 34px; height: 20px; appearance: none; border-radius: 10px; background: color-mix(in srgb, var(--muted) 35%, transparent); position: relative; cursor: pointer; flex: none; margin: 0; transition: background .15s; }
+.toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); transition: left .15s; }
+.toggle input:checked { background: var(--ink); }
+.toggle input:checked::after { left: 16px; }
+.toggle input:focus-visible { outline: 2px solid var(--strobe); outline-offset: 2px; }
+.toggle small { display: block; color: var(--muted); font-size: 11.5px; }
+.vol { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+input[type=range].plain { accent-color: var(--ink); width: 100%; }
+.note { font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 6px; }
+.note p { margin: 0; }
+.note a { color: inherit; }
+
+/* map overlays */
+.ovl { position: absolute; pointer-events: none; }
+.ovl > * { pointer-events: auto; }
+.hint {
+  top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 10px; font-size: 12px; max-width: calc(100% - 90px);
+}
+.hint b { font-family: var(--f-mono); font-weight: 500; }
+.zoom { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
+.zoom button { width: 36px; height: 36px; border: 0; background: transparent; color: var(--ink); font: 500 18px var(--f-mono); cursor: pointer; }
+.zoom button + button { border-top: 1px solid var(--line); }
+.zoom button:focus-visible { outline: 2px solid var(--strobe); outline-offset: -2px; }
+.legend {
+  left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 6px;
+  padding: 8px 10px; font-size: 11.5px; display: grid; gap: 4px; max-width: calc(100% - 24px);
+}
+.legend div { display: flex; align-items: center; gap: 8px; }
+.sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.sw.go { background: var(--siren); box-shadow: 0 0 0 3px color-mix(in srgb, var(--siren) 25%, transparent); }
+.sw.tx { background: var(--panel); border: 3px solid var(--strobe); }
+.sw.quiet { width: 8px; height: 8px; margin: 2px; background: var(--muted); }
+.sw.h { border-radius: 0; background: none; position: relative; }
+.sw.h::before, .sw.h::after { content: ""; position: absolute; background: var(--ok); }
+.sw.h::before { left: 4px; top: 0; width: 4px; height: 12px; }
+.sw.h::after { top: 4px; left: 0; width: 12px; height: 4px; }
+.ramp { width: 100%; height: 6px; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--siren) 6%, var(--land)), color-mix(in srgb, var(--siren) 60%, var(--land))); }
+.rampl { display: flex; justify-content: space-between; font: 10px var(--f-mono); color: var(--muted); }
+
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  .app { grid-template-columns: 1fr; grid-template-rows: 58vh auto; height: auto; }
+  .map { grid-row: 1; height: 58vh; }
+  .panel { grid-row: 2; border-right: 0; border-top: 1px solid var(--line); overflow: visible;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1 { font-size: 34px; }
+  .legend { font-size: 10.5px; grid-template-columns: repeat(2, auto); column-gap: 12px; padding: 6px 8px; }
+  #lg-choro { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #play[aria-pressed="true"] { animation: none; }
+  .meter i { transition: none; }
+}
+</style>
+
+<div class="app">
+  <aside class="panel">
+    <header>
+      <div class="eyebrow">FDNY EMS 派车回放 · 2026 年 9 月 21–27 日</div>
+      <h1>纽约警笛<span class="x">听诊器</span></h1>
+      <p class="lede">在地图上点一个收听点，就能回放这一周纽约救护车从附近经过时的声音：距离越远越轻、越闷，开过身边时音调还会变。</p>
+    </header>
+
+    <section aria-label="时间控制">
+      <div class="transport">
+        <button id="play" aria-pressed="false" aria-label="开始收听">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path id="playicon" fill="currentColor" d="M7 4.5v15l12.5-7.5z"/></svg>
+        </button>
+        <div class="clock">
+          <span class="day" id="day">周五 · 9 月 25 日</span>
+          <span class="time" id="time">18:00:00</span>
+        </div>
+      </div>
+      <div class="speedrow">
+        <span>回放速度</span>
+        <div class="seg" id="speeds" role="group" aria-label="回放速度">
+          <button data-s="1">1×</button><button data-s="10" aria-pressed="true">10×</button><button data-s="60">60×</button><button data-s="300">300×</button>
+        </div>
+      </div>
+      <div class="tlhead"><span>拖动时间轴选时间</span><span>曲线：全市同时鸣笛的救护车数</span></div>
+      <div class="timeline">
+        <canvas id="spark" aria-hidden="true"></canvas>
+        <input id="scrub" type="range" min="0" max="604799" step="60" value="324000" aria-label="回放时间">
+        <div class="days"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      </div>
+      <div class="jump">
+        <label for="jday">跳到</label>
+        <select id="jday" aria-label="日期">
+          <option value="0">周一 9/21</option><option value="1">周二 9/22</option><option value="2">周三 9/23</option><option value="3">周四 9/24</option><option value="4" selected>周五 9/25</option><option value="5">周六 9/26</option><option value="6">周日 9/27</option>
+        </select>
+        <input id="jtime" type="time" step="60" value="18:00" aria-label="时刻">
+        <div class="pre" id="jpre"><button data-h="3">03:00</button><button data-h="8">08:00</button><button data-h="18">18:00</button><button data-h="21">21:00</button></div>
+      </div>
+    </section>
+
+    <section aria-live="off">
+      <h2>此刻在收听点 <small id="where">—</small></h2>
+      <div class="meter" aria-hidden="true"><i id="meterbar"></i></div>
+      <div class="ticks" aria-hidden="true">
+        <span style="left:14.3%">40<br>图书馆</span><span style="left:42.9%">60<br>交谈</span><span style="left:71.4%">80<br>地铁车厢</span><span style="left:92%">95<br>警笛 30 m</span>
+      </div>
+      <div class="readout">
+        <div><b id="r-db">—</b><span>估计声级 dB(A)</span></div>
+        <div><b id="r-n">0</b><span>2 km 内鸣笛车</span></div>
+        <div><b id="r-near">—</b><span id="r-dir">最近一辆</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>这一周在这里 <small>300 m 内</small></h2>
+      <div class="big" id="w-n">—<small>次鸣笛经过</small></div>
+      <p class="statline" id="w-line">—</p>
+      <canvas id="hours" aria-label="按小时统计的鸣笛经过次数"></canvas>
+      <div class="pct"><span id="pct-l">和全市居民相比</span><div class="bar"><i id="pct-i" style="left:50%"></i></div><span class="num" id="pct-v">…</span></div>
+    </section>
+
+    <section>
+      <h2>附近的鸣笛派车 <small>3 km 内</small></h2>
+      <ul id="ticker"><li class="empty">—</li></ul>
+    </section>
+
+    <section class="settings" aria-label="设置">
+      <h2>设置</h2>
+      <div class="vol"><label for="vol">音量</label><input id="vol" class="plain" type="range" min="0" max="1.5" step="0.01" value="0.9"></div>
+      <label class="toggle"><span>隔着窗户听<small>双层玻璃大约挡掉 25 dB，高音挡得更多</small></span><input id="win" type="checkbox"></label>
+      <label class="toggle"><span>城市底噪<small>持续的交通低频声</small></span><input id="amb" type="checkbox" checked></label>
+      <label class="toggle"><span>显示未鸣笛的救护车</span><input id="quiet" type="checkbox" checked></label>
+      <label class="toggle"><span>派车密度底图<small>按邮编区，每平方公里每周派车次数</small></span><input id="choro" type="checkbox"></label>
+    </section>
+
+    <div class="note">
+      <p><b>哪些是真的：</b>每次派车的时间（派出、到场、送医、到院）、邮编、严重度和呼叫类型，来自 NYC Open Data 的 FDNY EMS Incident Dispatch Data（2026 年 9 月 21–27 日，共 <span id="n-inc">—</span> 次）。医院位置来自 NYC Facilities Database。</p>
+      <p><b>哪些是模拟的：</b>公开数据只精确到邮编，所以现场位置在邮编区内随机取点；出发点按真实行驶时长反推；路线按街道网格走 L 形；送往最近的医院。假设严重度 1–4 去现场时鸣笛，1–2 送医时鸣笛。警笛声为合成，声级用简单的点声源衰减模型估算。不含医院自营和私营救护车。</p>
+    </div>
+  </aside>
+
+  <main class="map">
+    <canvas id="map" tabindex="0" aria-label="纽约地图。点击放置收听点，拖动平移，滚轮缩放。"></canvas>
+    <div class="ovl hint" id="hint">点击地图移动收听点 · <b id="hint-zip">—</b></div>
+    <div class="ovl zoom">
+      <button id="zin" aria-label="放大">+</button>
+      <button id="zout" aria-label="缩小">−</button>
+      <button id="zhome" aria-label="回到收听点" title="回到收听点">◎</button>
+    </div>
+    <div class="ovl legend" id="legend">
+      <div><span class="sw go"></span>鸣笛 · 前往现场</div>
+      <div><span class="sw tx"></span>鸣笛 · 送往医院</div>
+      <div id="lg-quiet"><span class="sw quiet"></span>未鸣笛行驶</div>
+      <div><span class="sw h"></span>医院</div>
+      <div id="lg-choro" hidden style="display:grid;gap:2px"><div class="ramp"></div><div class="rampl"><span id="ch-min"></span><span>每 km² 每周派车</span><span id="ch-max"></span></div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+(() => {
+"use strict";
+const Q = D.proj[4];               // metres per unit
+const WEEK = 7 * 86400;
+const DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+const CT = {
+  SICK: "身体不适", INJURY: "受伤", UNKNOW: "情况不明", CARDBR: "胸痛/呼吸困难", CARD: "心脏", UNC: "意识不清",
+  DRUG: "药物/中毒", EDPC: "精神异常", EDP: "精神异常", EDPM: "精神异常", EDPT: "精神异常", INJMAJ: "重伤",
+  INJMIN: "轻伤", ABDPN: "腹痛", DIFFBR: "呼吸困难", MVAINJ: "车祸受伤", ALTMEN: "意识改变", STATEP: "癫痫持续",
+  PEDSTR: "行人被撞", ARREST: "心脏骤停", OTHER: "其他", CVAC: "疑似中风", CVA: "中风", RESPIR: "呼吸系统",
+  INBLED: "内出血", SICMIN: "轻症", ANAPH: "严重过敏", SEIZR: "抽搐", ASTHMB: "哮喘", TRAUMA: "创伤", STAB: "刀伤",
+  SICPED: "儿童患病", GYNHEM: "妇科出血", PD13C: "警方请求", OBMAJ: "产科急症", OBLAB: "分娩", RESCUE: "救援",
+  MEDRXN: "药物反应", SHOT: "枪伤", BURNMA: "烧伤", BURNMI: "轻度烧伤", CARDFC: "心脏", ALLERG: "过敏",
+  DROWN: "溺水", HEAT: "中暑", COLD: "冻伤", ARRPED: "儿童心脏骤停", OBMIS: "流产", INHALE: "吸入",
+  JUMPDN: "坠落", MCI: "群体伤亡", SAFE: "安全检查", TRANS: "转运", SHOTVA: "枪伤"
+};
+
+/* ---------- decode legs ---------- */
+const L = D.legs, NL = L.length / 9;
+const T0 = new Float64Array(NL), DUR = new Float32Array(NL), META = new Int32Array(NL);
+const X0 = new Float32Array(NL), Y0 = new Float32Array(NL), XC = new Float32Array(NL), YC = new Float32Array(NL);
+const X1 = new Float32Array(NL), Y1 = new Float32Array(NL), LA = new Float32Array(NL), LB = new Float32Array(NL);
+let acc = 0;
+for (let i = 0; i < NL; i++) {
+  const b = i * 9; acc += L[b]; T0[i] = acc; DUR[i] = L[b + 1];
+  X0[i] = L[b + 2]; Y0[i] = L[b + 3]; XC[i] = L[b + 4]; YC[i] = L[b + 5]; X1[i] = L[b + 6]; Y1[i] = L[b + 7]; META[i] = L[b + 8];
+  LA[i] = Math.hypot(XC[i] - X0[i], YC[i] - Y0[i]); LB[i] = Math.hypot(X1[i] - XC[i], Y1[i] - YC[i]);
+}
+const isSiren = i => (META[i] & 1) === 1;
+const isTx = i => (META[i] & 2) === 2;
+const sevOf = i => (META[i] >> 2) & 15;
+const ctOf = i => D.ct[(META[i] >> 6) & 255];
+const zipOf = i => META[i] >> 14;
+document.getElementById("n-inc").textContent = D.zipInc.reduce((a, b) => a + b, 0).toLocaleString("zh-CN");
+
+function upper(t) { let lo = 0, hi = NL; while (lo < hi) { const m = (lo + hi) >> 1; if (T0[m] <= t) lo = m + 1; else hi = m; } return lo; }
+function activeAt(t, out) {
+  out.length = 0;
+  for (let i = upper(t) - 1; i >= 0 && T0[i] > t - 3601; i--) if (t < T0[i] + DUR[i]) out.push(i);
+  return out;
+}
+function legPos(i, t, o) {
+  const f = Math.min(1, Math.max(0, (t - T0[i]) / DUR[i]));
+  const tot = LA[i] + LB[i], s = f * tot;
+  if (s <= LA[i] && LA[i] > 0) {
+    const k = s / LA[i]; o.x = X0[i] + (XC[i] - X0[i]) * k; o.y = Y0[i] + (YC[i] - Y0[i]) * k;
+    o.ux = (XC[i] - X0[i]) / LA[i]; o.uy = (YC[i] - Y0[i]) / LA[i];
+  } else {
+    const k = LB[i] > 0 ? (s - LA[i]) / LB[i] : 1; o.x = XC[i] + (X1[i] - XC[i]) * k; o.y = YC[i] + (Y1[i] - YC[i]) * k;
+    o.ux = LB[i] > 0 ? (X1[i] - XC[i]) / LB[i] : 0; o.uy = LB[i] > 0 ? (Y1[i] - YC[i]) / LB[i] : 0;
+  }
+  o.v = tot * Q / DUR[i];      // m per simulated second
+  return o;
+}
+
+/* ---------- zip geometry ---------- */
+const ZIPS = D.zips.map(z => {
+  const rings = z.r.map(([hole, d]) => {
+    const pts = new Float32Array(d.length); let x = 0, y = 0;
+    for (let k = 0; k < d.length; k += 2) { x += d[k]; y += d[k + 1]; pts[k] = x; pts[k + 1] = y; }
+    return pts;
+  });
+  const path = new Path2D();
+  let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+  for (const p of rings) {
+    path.moveTo(p[0], p[1]);
+    for (let k = 2; k < p.length; k += 2) { path.lineTo(p[k], p[k + 1]); }
+    path.closePath();
+    for (let k = 0; k < p.length; k += 2) { minx = Math.min(minx, p[k]); maxx = Math.max(maxx, p[k]); miny = Math.min(miny, p[k + 1]); maxy = Math.max(maxy, p[k + 1]); }
+  }
+  return { code: z.c, label: z.l, pop: z.p, area: z.a, rings, path, bbox: [minx, miny, maxx, maxy] };
+});
+const CITY = ZIPS.reduce((b, z) => [Math.min(b[0], z.bbox[0]), Math.min(b[1], z.bbox[1]), Math.max(b[2], z.bbox[2]), Math.max(b[3], z.bbox[3])], [1e9, 1e9, -1e9, -1e9]);
+function inZip(z, x, y) {
+  const b = z.bbox; if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) return false;
+  let inside = false;
+  for (const p of z.rings) {
+    const n = p.length;
+    for (let i = 0, j = n - 2; i < n; j = i, i += 2) {
+      const yi = p[i + 1], yj = p[j + 1];
+      if ((yi > y) !== (yj > y) && x < (p[j] - p[i]) * (y - yi) / (yj - yi) + p[i]) inside = !inside;
+    }
+  }
+  return inside;
+}
+const zipAt = (x, y) => ZIPS.find(z => inZip(z, x, y)) || null;
+const DENS = ZIPS.map((z, i) => D.zipInc[i] / Math.max(z.area, 0.05));
+const dSorted = DENS.filter(d => d > 0).slice().sort((a, b) => a - b);
+const dLo = dSorted[Math.floor(dSorted.length * 0.05)], dHi = dSorted[Math.floor(dSorted.length * 0.97)];
+document.getElementById("ch-min").textContent = Math.round(dLo);
+document.getElementById("ch-max").textContent = Math.round(dHi) + "+";
+
+const HOSP = D.hosp.map(([n, x, y]) => ({ n, x, y }));
+
+/* ---------- geometry helpers ---------- */
+function segDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  let t = l2 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+}
+function legDist(i, x, y) { return Math.min(segDist(x, y, X0[i], Y0[i], XC[i], YC[i]), segDist(x, y, XC[i], YC[i], X1[i], Y1[i])); }
+const R300 = 300 / Q;
+function weekStats(x, y, hours) {
+  let n = 0;
+  for (let i = 0; i < NL; i++) {
+    if (!(META[i] & 1)) continue;
+    const a = X0[i], c = XC[i], e = X1[i];
+    if (x < Math.min(a, c, e) - R300 || x > Math.max(a, c, e) + R300) continue;
+    const b = Y0[i], d = YC[i], f = Y1[i];
+    if (y < Math.min(b, d, f) - R300 || y > Math.max(b, d, f) + R300) continue;
+    if (legDist(i, x, y) < R300) { n++; if (hours) hours[Math.floor((T0[i] % 86400) / 3600)]++; }
+  }
+  return n;
+}
+
+/* ---------- siren level model ---------- */
+// Source ~118 dB(A) at 3 m, spherical spreading plus urban excess attenuation (buildings, ground) ~1.2 dB / 100 m.
+const splAt = d => 118 - 20 * Math.log10(Math.max(d, 3) / 3) - 0.012 * d;
+const AMBIENT_DB = 55;
+
+/* ---------- state ---------- */
+const lonlat = (lon, lat) => [(lon - D.proj[0]) * D.proj[2] / Q, (lat - D.proj[1]) * D.proj[3] / Q];
+let [LX, LY] = lonlat(-73.9773, 40.7390);   // default listening spot: Kips Bay, near Bellevue
+let simT = 4 * 86400 + 18 * 3600;           // Friday 18:00
+let speed = 10, running = false;
+const view = { cx: 0, cy: 0, s: 1 };
+let W = 0, H = 0, dpr = 1, baseDirty = true;
+let showQuiet = true, showChoro = false;
+const active = [];
+
+/* ---------- colors from tokens ---------- */
+let C = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["bg", "panel", "land", "water", "ink", "muted", "line", "siren", "strobe", "ok"]) C[k] = cs.getPropertyValue("--" + k).trim();
+  baseDirty = true; drawSpark(); drawHours();
+}
+
+/* ---------- map canvas ---------- */
+const cv = document.getElementById("map"), cx = cv.getContext("2d");
+const base = document.createElement("canvas"), bx = base.getContext("2d");
+function resize() {
+  const r = cv.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const first = !W; W = r.width; H = r.height;
+  if (!W || !H) { W = 0; return; }
+  cv.width = base.width = Math.round(W * dpr); cv.height = base.height = Math.round(H * dpr);
+  if (first) fitCity();
+  baseDirty = true;
+}
+function fitCity() {
+  const w = CITY[2] - CITY[0], h = CITY[3] - CITY[1];
+  view.s = Math.min(W / w, H / h) * 0.94;
+  view.cx = (CITY[0] + CITY[2]) / 2; view.cy = (CITY[1] + CITY[3]) / 2;
+  // open on the listening spot with ~4.5 km of surroundings in view
+  view.s = Math.max(view.s, Math.min(W, H) / (2 * 4500 / Q)); view.cx = LX; view.cy = LY;
+}
+const sx = x => W / 2 + (x - view.cx) * view.s, sy = y => H / 2 - (y - view.cy) * view.s;
+const wx = px => view.cx + (px - W / 2) / view.s, wy = py => view.cy - (py - H / 2) / view.s;
+const S_MIN = () => Math.min(W / (CITY[2] - CITY[0]), H / (CITY[3] - CITY[1])) * 0.7, S_MAX = 6;
+function zoomAt(px, py, f) {
+  const x = wx(px), y = wy(py);
+  view.s = Math.max(S_MIN(), Math.min(S_MAX, view.s * f));
+  view.cx = x - (px - W / 2) / view.s; view.cy = y + (py - H / 2) / view.s; baseDirty = true;
+}
+
+function drawBase() {
+  const g = bx; g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = C.water; g.fillRect(0, 0, base.width, base.height);
+  const s = view.s * dpr;
+  g.setTransform(s, 0, 0, -s, dpr * (W / 2 - view.cx * view.s), dpr * (H / 2 + view.cy * view.s));
+  g.lineJoin = "round";
+  for (let i = 0; i < ZIPS.length; i++) {
+    const z = ZIPS[i];
+    g.fillStyle = C.land; g.fill(z.path, "evenodd");
+    if (showChoro && DENS[i] > 0) {
+      const t = Math.max(0, Math.min(1, Math.log(DENS[i] / dLo) / Math.log(dHi / dLo)));
+      g.globalAlpha = 0.06 + 0.54 * t; g.fillStyle = C.siren; g.fill(z.path, "evenodd"); g.globalAlpha = 1;
+    }
+  }
+  g.strokeStyle = C.line; g.lineWidth = 0.8 / view.s;
+  for (const z of ZIPS) g.stroke(z.path);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // hospitals
+  const showNames = view.s > 1.6;
+  g.font = `500 10.5px ${getComputedStyle(document.body).getPropertyValue("--f-body") || "sans-serif"}`;
+  for (const h of HOSP) {
+    const x = sx(h.x), y = sy(h.y);
+    if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
+    const k = view.s < 0.5 ? 3 : 4.5, w = k * 0.6;
+    g.globalAlpha = 0.85; g.fillStyle = C.ok; g.fillRect(x - w / 2, y - k, w, 2 * k); g.fillRect(x - k, y - w / 2, 2 * k, w); g.globalAlpha = 1;
+    if (showNames) { g.fillStyle = C.muted; g.fillText(h.n.replace(/ (Hospital|Medical) Center$/, "").slice(0, 34), x + 9, y + 4); }
+  }
+  // listener rings
+  const lx = sx(LX), ly = sy(LY);
+  g.setLineDash([3, 4]); g.strokeStyle = C.muted; g.lineWidth = 1; g.font = `10px ${"IBM Plex Mono, monospace"}`; g.fillStyle = C.muted;
+  for (const [m, lab] of [[300, "300 m"], [1000, "1 km"], [2000, "2 km"]]) {
+    const r = m / Q * view.s; if (r < 14) continue;
+    g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.stroke();
+    g.fillText(lab, lx + r * 0.71 + 3, ly - r * 0.71 - 3);
+  }
+  g.setLineDash([]);
+  baseDirty = false;
+}
+
+const P = { x: 0, y: 0, ux: 0, uy: 0, v: 0 };
+function drawFrame(nowMs) {
+  if (!W || !base.width) return;
+  if (baseDirty) drawBase();
+  const g = cx; g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(base, 0, 0);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const lx = sx(LX), ly = sy(LY);
+  // lines to audible voices
+  for (const v of audio.voices.values()) {
+    if (!v.pos) continue;
+    g.strokeStyle = C.siren; g.globalAlpha = Math.min(0.7, 0.08 + Math.sqrt(v.g) * 0.9); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(lx, ly); g.lineTo(sx(v.pos.x), sy(v.pos.y)); g.stroke();
+  }
+  g.globalAlpha = 1;
+  const flash = nowMs / 1000;
+  const rDot = Math.max(4, Math.min(6, view.s * 2.5));
+  for (const i of active) {
+    legPos(i, simT, P);
+    const x = sx(P.x), y = sy(P.y);
+    if (x < -10 || y < -10 || x > W + 10 || y > H + 10) continue;
+    if (!isSiren(i)) {
+      if (!showQuiet) continue;
+      g.fillStyle = C.muted; g.globalAlpha = 0.75; g.beginPath(); g.arc(x, y, rDot * 0.7, 0, 7); g.fill(); g.globalAlpha = 1;
+      continue;
+    }
+    const red = ((flash * 2.6 + (i % 7) * 0.13) % 1) < 0.5;
+    g.fillStyle = red ? C.siren : C.strobe; g.globalAlpha = 0.22;
+    g.beginPath(); g.arc(x, y, rDot * 2.6, 0, 7); g.fill(); g.globalAlpha = 1;
+    if (isTx(i)) {
+      g.fillStyle = C.panel; g.strokeStyle = C.strobe; g.lineWidth = 2.4;
+      g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill(); g.stroke();
+    } else {
+      g.fillStyle = C.siren; g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill();
+    }
+  }
+  // listener
+  if (running) {
+    const ph = (nowMs / 1400) % 1;
+    g.strokeStyle = C.ink; g.globalAlpha = 1 - ph; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(lx, ly, 8 + ph * 26, 0, 7); g.stroke(); g.globalAlpha = 1;
+  }
+  g.fillStyle = C.ink; g.beginPath(); g.arc(lx, ly, 7, 0, 7); g.fill();
+  g.fillStyle = C.land; g.beginPath(); g.arc(lx, ly, 3, 0, 7); g.fill();
+}
+
+/* ---------- pointer interaction ---------- */
+const ptrs = new Map(); let drag = null, pinch = null, moved = false;
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  if (ptrs.size === 1) { drag = { x: e.offsetX, y: e.offsetY, cx: view.cx, cy: view.cy }; moved = false; }
+  if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()]; moved = true;
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: view.s, mx: wx((a.x + b.x) / 2), my: wy((a.y + b.y) / 2) };
+  }
+});
+cv.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  if (pinch && ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()], m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    view.s = Math.max(S_MIN(), Math.min(S_MAX, pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+    view.cx = pinch.mx - (m.x - W / 2) / view.s; view.cy = pinch.my + (m.y - H / 2) / view.s; baseDirty = true;
+  } else if (drag) {
+    const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y;
+    if (Math.hypot(dx, dy) > 4) moved = true;
+    if (moved) { view.cx = drag.cx - dx / view.s; view.cy = drag.cy + dy / view.s; baseDirty = true; cv.style.cursor = "grabbing"; }
+  }
+});
+function endPtr(e) {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) {
+    if (!moved && drag && e.type === "pointerup") setListener(wx(e.offsetX), wy(e.offsetY));
+    drag = null; pinch = null; cv.style.cursor = "";
+  } else if (ptrs.size === 1) { pinch = null; const [p] = [...ptrs.values()]; drag = { x: p.x, y: p.y, cx: view.cx, cy: view.cy }; }
+}
+cv.addEventListener("pointerup", endPtr); cv.addEventListener("pointercancel", endPtr);
+cv.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.offsetX, e.offsetY, Math.exp(-e.deltaY * 0.0016)); }, { passive: false });
+cv.addEventListener("keydown", e => {
+  const step = 60 / view.s; let used = true;
+  if (e.key === "ArrowLeft") view.cx -= step; else if (e.key === "ArrowRight") view.cx += step;
+  else if (e.key === "ArrowUp") view.cy += step; else if (e.key === "ArrowDown") view.cy -= step;
+  else if (e.key === "+" || e.key === "=") zoomAt(W / 2, H / 2, 1.4); else if (e.key === "-") zoomAt(W / 2, H / 2, 1 / 1.4);
+  else if (e.key === "Enter" || e.key === " ") setListener(view.cx, view.cy);
+  else used = false;
+  if (used) { e.preventDefault(); baseDirty = true; }
+});
+document.getElementById("zin").onclick = () => zoomAt(W / 2, H / 2, 1.5);
+document.getElementById("zout").onclick = () => zoomAt(W / 2, H / 2, 1 / 1.5);
+document.getElementById("zhome").onclick = () => { view.cx = LX; view.cy = LY; view.s = Math.max(view.s, 0.9); baseDirty = true; };
+
+/* ---------- listener + weekly stats ---------- */
+let samples = null;
+function setListener(x, y) {
+  const z = zipAt(x, y);
+  if (!z) { flashHint("这里是水面，换一个陆地上的点"); return; }
+  LX = x; LY = y; baseDirty = true;
+  const label = z.label.split(",")[0];
+  document.getElementById("hint-zip").textContent = "邮编 " + label;
+  document.getElementById("where").textContent = "邮编 " + label;
+  HOURS.fill(0);
+  const n = weekStats(LX, LY, HOURS);
+  myCount = n;
+  document.getElementById("w-n").firstChild.nodeValue = n.toLocaleString("zh-CN");
+  let pk = 0; for (let h = 1; h < 24; h++) if (HOURS[h] > HOURS[pk]) pk = h;
+  let qt = 0; for (let h = 1; h < 24; h++) if (HOURS[h] < HOURS[qt]) qt = h;
+  document.getElementById("w-line").innerHTML = n === 0
+    ? "这一周模拟路线都没有从 300 m 内经过。"
+    : `平均每天 <b>${(n / 7).toFixed(1)}</b> 次。最吵在 <b>${pk}–${pk + 1} 点</b>（${HOURS[pk]} 次），最安静在 <b>${qt}–${qt + 1} 点</b>（${HOURS[qt]} 次）。`;
+  drawHours(); updatePct(); lastTick = -1;
+}
+let hintTimer = 0;
+function flashHint(msg) {
+  const el = document.getElementById("hint"), old = el.innerHTML;
+  el.textContent = msg; clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { el.innerHTML = old; }, 1800);
+}
+const HOURS = new Array(24).fill(0); let myCount = 0;
+function drawHours() {
+  const c = document.getElementById("hours"); if (!c || !C.ink) return;
+  const r = c.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = r.width * d; c.height = r.height * d;
+  const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  const max = Math.max(1, ...HOURS), bw = r.width / 24, hh = r.height - 14;
+  let pk = HOURS.indexOf(Math.max(...HOURS));
+  for (let h = 0; h < 24; h++) {
+    const bh = HOURS[h] / max * (hh - 2);
+    g.fillStyle = h === pk && HOURS[h] > 0 ? C.siren : C.muted; g.globalAlpha = h === pk ? 1 : 0.45;
+    g.fillRect(h * bw + 1, hh - bh, bw - 2, Math.max(bh, 1));
+  }
+  g.globalAlpha = 1; g.fillStyle = C.muted; g.font = "10px IBM Plex Mono, monospace"; g.textAlign = "center";
+  for (const h of [0, 6, 12, 18]) g.fillText(h + "点", h * bw + bw / 2, r.height - 2);
+}
+function computeSamples() {
+  // population-weighted random home locations across the city
+  const tot = ZIPS.reduce((a, z) => a + z.pop, 0); const out = [];
+  let seed = 12345; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 260; k++) {
+    let r = rnd() * tot, z = ZIPS[0];
+    for (const q of ZIPS) { r -= q.pop; if (r <= 0) { z = q; break; } }
+    for (let t = 0; t < 200; t++) {
+      const x = z.bbox[0] + rnd() * (z.bbox[2] - z.bbox[0]), y = z.bbox[1] + rnd() * (z.bbox[3] - z.bbox[1]);
+      if (inZip(z, x, y)) { out.push(weekStats(x, y)); break; }
+    }
+  }
+  samples = out.sort((a, b) => a - b); updatePct();
+}
+function updatePct() {
+  if (!samples || !samples.length) return;
+  let below = 0; for (const v of samples) if (v < myCount) below++;
+  const p = Math.round(below / samples.length * 100);
+  document.getElementById("pct-i").style.left = p + "%";
+  document.getElementById("pct-v").textContent = p + "%";
+  document.getElementById("pct-l").textContent = "比这些纽约人家吵";
+}
+
+/* ---------- timeline sparkline ---------- */
+const BINS = 7 * 96, SPARK = new Float32Array(BINS);
+for (let i = 0; i < NL; i++) {
+  if (!(META[i] & 1)) continue;
+  const a = Math.floor(T0[i] / 900), b = Math.min(BINS - 1, Math.floor((T0[i] + DUR[i]) / 900));
+  for (let k = a; k <= b; k++) if (k >= 0 && k < BINS) SPARK[k] += 1;
+}
+const spark = document.getElementById("spark"), scrub = document.getElementById("scrub");
+function drawSpark() {
+  if (!C.ink) return;
+  const r = spark.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+  spark.width = r.width * d; spark.height = r.height * d;
+  const g = spark.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  const max = Math.max(...SPARK), w = r.width, h = r.height;
+  g.beginPath(); g.moveTo(0, h);
+  for (let k = 0; k < BINS; k++) g.lineTo(k / BINS * w, h - SPARK[k] / max * (h - 4));
+  g.lineTo(w, h); g.closePath();
+  g.fillStyle = C.siren; g.globalAlpha = 0.18; g.fill(); g.globalAlpha = 1;
+  g.strokeStyle = C.siren; g.lineWidth = 1; g.beginPath();
+  for (let k = 0; k < BINS; k++) g[k ? "lineTo" : "moveTo"](k / BINS * w, h - SPARK[k] / max * (h - 4));
+  g.stroke();
+}
+let scrubbing = false;
+scrub.addEventListener("pointerdown", () => { scrubbing = true; });
+window.addEventListener("pointerup", () => { scrubbing = false; });
+scrub.addEventListener("input", () => { simT = +scrub.value; lastTick = -1; audio.resetVoices(); });
+
+/* ---------- audio ---------- */
+const audio = {
+  ctx: null, voices: new Map(), vol: 0.9, win: false, amb: true,
+  start() {
+    if (this.ctx) { this.ctx.resume(); return; }
+    const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.master = ctx.createGain(); this.master.gain.value = 0;
+    this.comp = ctx.createDynamicsCompressor(); this.comp.threshold.value = -18; this.comp.ratio.value = 4;
+    this.winLP = ctx.createBiquadFilter(); this.winLP.type = "lowpass"; this.winLP.frequency.value = 20000;
+    this.winG = ctx.createGain();
+    this.dry = ctx.createGain(); this.wet = ctx.createGain();
+    this.conv = ctx.createConvolver(); this.conv.buffer = this.ir(2.6);
+    this.dry.connect(this.winLP); this.wet.connect(this.conv); this.conv.connect(this.winLP);
+    this.winLP.connect(this.winG); this.winG.connect(this.comp); this.comp.connect(this.master); this.master.connect(ctx.destination);
+    // ambience: brown noise, low-passed
+    const n = ctx.sampleRate * 4, buf = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); let last = 0; for (let i = 0; i < n; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 420;
+    this.ambG = ctx.createGain(); this.ambG.gain.value = this.amb ? 0.22 : 0;
+    src.connect(lp); lp.connect(this.ambG); this.ambG.connect(this.winLP); src.start();
+    this.applyWin();
+  },
+  ir(sec) {
+    const ctx = this.ctx, n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch), pre = Math.floor(ctx.sampleRate * 0.025);
+      for (let i = pre; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2) * 0.6;
+    }
+    return b;
+  },
+  applyWin() {
+    if (!this.ctx) return; const t = this.ctx.currentTime;
+    this.winLP.frequency.setTargetAtTime(this.win ? 900 : 20000, t, 0.05);
+    this.winG.gain.setTargetAtTime(this.win ? 0.3 : 1, t, 0.05);
+  },
+  setRunning(on) {
+    if (!this.ctx) return;
+    this.master.gain.setTargetAtTime(on ? this.vol : 0, this.ctx.currentTime, 0.12);
+  },
+  makeVoice(i) {
+    const ctx = this.ctx, v = { i, mode: "wail", next: 0, phase: Math.random() * 4, base: 640 * (0.94 + ((i * 2654435761) % 1000) / 1000 * 0.12), g: 0 };
+    v.o1 = ctx.createOscillator(); v.o1.type = "sawtooth";
+    v.o2 = ctx.createOscillator(); v.o2.type = "square"; v.o2.detune.value = 7;
+    const m2 = ctx.createGain(); m2.gain.value = 0.35;
+    v.hp = ctx.createBiquadFilter(); v.hp.type = "highpass"; v.hp.frequency.value = 380;
+    v.horn = ctx.createBiquadFilter(); v.horn.type = "peaking"; v.horn.frequency.value = 1450; v.horn.Q.value = 1.1; v.horn.gain.value = 8;
+    v.lp = ctx.createBiquadFilter(); v.lp.type = "lowpass";
+    v.amp = ctx.createGain(); v.amp.gain.value = 0;
+    v.pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    v.dg = ctx.createGain(); v.wg = ctx.createGain();
+    v.o1.connect(v.hp); v.o2.connect(m2); m2.connect(v.hp); v.hp.connect(v.horn); v.horn.connect(v.lp); v.lp.connect(v.amp);
+    const out = v.pan || v.amp; if (v.pan) v.amp.connect(v.pan);
+    out.connect(v.dg); out.connect(v.wg); v.dg.connect(this.dry); v.wg.connect(this.wet);
+    v.o1.start(); v.o2.start();
+    return v;
+  },
+  killVoice(v) {
+    const t = this.ctx.currentTime;
+    v.amp.gain.setTargetAtTime(0, t, 0.15);
+    v.o1.stop(t + 1); v.o2.stop(t + 1);
+  },
+  resetVoices() { if (!this.ctx) return; for (const v of this.voices.values()) this.killVoice(v); this.voices.clear(); },
+  sirenHz(v, tr) {
+    if (tr > v.next) {             // operators switch between wail and yelp, especially near intersections
+      v.mode = Math.random() < 0.62 ? "wail" : "yelp";
+      v.next = tr + (v.mode === "wail" ? 6 + Math.random() * 8 : 2.5 + Math.random() * 4);
+    }
+    const lo = v.base, hi = v.base * 2.1;
+    if (v.mode === "wail") {
+      const P = 4.4, ph = ((tr + v.phase) % P) / P;
+      const u = ph < 0.42 ? Math.sin(ph / 0.42 * Math.PI / 2) : 1 - Math.pow((ph - 0.42) / 0.58, 1.3);
+      return lo + (hi - lo) * u;
+    }
+    const P = 0.3, ph = ((tr + v.phase) % P) / P;
+    return lo + (hi - lo) * (ph < 0.85 ? ph / 0.85 : 1 - (ph - 0.85) / 0.15);
+  },
+  update(cands) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, want = new Set(cands.map(c => c.i));
+    for (const [i, v] of this.voices) if (!want.has(i)) { this.killVoice(v); this.voices.delete(i); }
+    for (const c of cands) {
+      let v = this.voices.get(c.i);
+      if (!v) { v = this.makeVoice(c.i); this.voices.set(c.i, v); }
+      v.pos = { x: c.x, y: c.y };
+      const g = Math.min(1, Math.pow(10, (c.spl - 100) / 20)); v.g = g;
+      const f = this.sirenHz(v, t) * c.doppler;
+      v.o1.frequency.setTargetAtTime(f, t, 0.006); v.o2.frequency.setTargetAtTime(f, t, 0.006);
+      v.amp.gain.setTargetAtTime(g * 0.5, t, 0.08);
+      v.lp.frequency.setTargetAtTime(600 + 9000 * Math.exp(-c.d / 450), t, 0.08);
+      if (v.pan) v.pan.pan.setTargetAtTime(c.pan, t, 0.08);
+      const w = Math.min(0.85, 0.12 + c.d / 1400);
+      v.wg.gain.setTargetAtTime(w * 0.9, t, 0.1); v.dg.gain.setTargetAtTime(1 - w * 0.75, t, 0.1);
+    }
+  }
+};
+
+/* ---------- live readout + ticker ---------- */
+const MAXV = 8, R_AUDIBLE = 2500 / Q;
+function listen() {
+  const cands = [];
+  let n2k = 0, nearest = null;
+  for (const i of active) {
+    if (!isSiren(i)) continue;
+    legPos(i, simT, P);
+    const dx = (P.x - LX) * Q, dy = (P.y - LY) * Q, d = Math.max(3, Math.hypot(dx, dy));
+    if (d > R_AUDIBLE * Q) continue;
+    if (d <= 2000) n2k++;
+    const vr = (P.ux * dx + P.uy * dy) / d * P.v;   // + = moving away
+    const c = { i, x: P.x, y: P.y, d, spl: splAt(d), pan: Math.max(-1, Math.min(1, dx / Math.max(d, 40))) * 0.85, doppler: 343 / (343 + vr), vr };
+    cands.push(c);
+    if (!nearest || d < nearest.d) nearest = c;
+  }
+  cands.sort((a, b) => b.spl - a.spl);
+  const top = cands.slice(0, MAXV);
+  audio.update(running ? top : []);
+  // estimated level at listener
+  let e = Math.pow(10, AMBIENT_DB / 10);
+  for (const c of cands) e += Math.pow(10, c.spl / 10);
+  let db = 10 * Math.log10(e); if (audio.win) db -= 25;
+  return { db, n2k, nearest };
+}
+const fmtT = t => { const s = Math.floor(t % 86400); return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, "0")).join(":"); };
+let lastTick = -1;
+function updateTicker() {
+  const ul = document.getElementById("ticker"), items = [];
+  const R = 3000 / Q;
+  for (let i = upper(simT) - 1; i >= 0 && T0[i] > simT - 4 * 3600 && items.length < 7; i--) {
+    if (!isSiren(i) || isTx(i)) continue;
+    const d = Math.hypot(X1[i] - LX, Y1[i] - LY);
+    if (d > R) continue;
+    items.push({ i, d: d * Q });
+  }
+  if (!items.length) { ul.innerHTML = '<li class="empty">过去 4 小时，3 km 内没有鸣笛派车。</li>'; return; }
+  ul.innerHTML = items.map(({ i, d }) => {
+    const ct = ctOf(i), sev = sevOf(i), z = ZIPS[zipOf(i)];
+    return `<li><span class="t">${fmtT(T0[i]).slice(0, 5)}</span><span class="what"><span class="code">${ct}</span>${CT[ct] || "其他"}<span class="sev ${sev > 2 ? "s2" : ""}" title="FDNY 严重度，1 最危急">${sev}</span></span><span class="d">${d < 1000 ? Math.round(d / 10) * 10 + " m" : (d / 1000).toFixed(1) + " km"}</span></li>`;
+  }).join("");
+}
+
+/* ---------- main loop ---------- */
+const el = id => document.getElementById(id);
+let lastMs = performance.now(), lastUI = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - lastMs) / 1000); lastMs = now;
+  if (running) { simT += dt * speed; if (simT >= WEEK) { simT -= WEEK; audio.resetVoices(); } }
+  activeAt(simT, active);
+  const r = listen();
+  drawFrame(now);
+  if (now - lastUI > 120) {
+    lastUI = now;
+    const day = Math.floor(simT / 86400);
+    el("day").textContent = `${DAYS[day]} · 9 月 ${21 + day} 日`;
+    el("time").textContent = fmtT(simT);
+    if (!scrubbing) scrub.value = Math.floor(simT);
+    if (document.activeElement !== jday) jday.value = day;
+    if (document.activeElement !== jtime) jtime.value = fmtT(simT).slice(0, 5);
+    el("r-db").textContent = Math.round(r.db);
+    el("meterbar").style.width = Math.max(0, Math.min(100, (r.db - 30) / 70 * 100)) + "%";
+    el("r-n").textContent = r.n2k;
+    if (r.nearest) {
+      el("r-near").textContent = r.nearest.d < 1000 ? Math.round(r.nearest.d / 10) * 10 + " m" : (r.nearest.d / 1000).toFixed(1) + " km";
+      el("r-dir").textContent = r.nearest.vr < -0.5 ? "最近一辆 · 正在靠近" : r.nearest.vr > 0.5 ? "最近一辆 · 正在远离" : "最近一辆";
+    } else { el("r-near").textContent = "—"; el("r-dir").textContent = "2.5 km 内没有"; }
+    const tick = Math.floor(simT / 20);
+    if (tick !== lastTick) { lastTick = tick; updateTicker(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- controls ---------- */
+const jday = el("jday"), jtime = el("jtime");
+function jumpTo(h, m) {
+  simT = (+jday.value) * 86400 + h * 3600 + m * 60;
+  scrub.value = simT; lastTick = -1; audio.resetVoices();
+}
+function jumpFromInputs() { const [h, m] = (jtime.value || "00:00").split(":").map(Number); jumpTo(h || 0, m || 0); }
+jday.addEventListener("change", jumpFromInputs);
+jtime.addEventListener("change", jumpFromInputs);
+jtime.addEventListener("keydown", e => { if (e.key === "Enter") jumpFromInputs(); });
+el("jpre").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  jtime.value = String(b.dataset.h).padStart(2, "0") + ":00"; jumpTo(+b.dataset.h, 0);
+});
+const playBtn = el("play"), playIcon = el("playicon");
+playBtn.onclick = () => {
+  running = !running;
+  if (running) audio.start();
+  audio.setRunning(running);
+  if (!running) audio.resetVoices();
+  playBtn.setAttribute("aria-pressed", running);
+  playBtn.setAttribute("aria-label", running ? "暂停" : "开始收听");
+  playIcon.setAttribute("d", running ? "M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z" : "M7 4.5v15l12.5-7.5z");
+};
+el("speeds").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  speed = +b.dataset.s;
+  for (const x of el("speeds").children) x.setAttribute("aria-pressed", x === b);
+});
+el("vol").oninput = e => { audio.vol = +e.target.value; audio.setRunning(running); };
+el("win").onchange = e => { audio.win = e.target.checked; audio.applyWin(); };
+el("amb").onchange = e => { audio.amb = e.target.checked; if (audio.ctx) audio.ambG.gain.setTargetAtTime(audio.amb ? 0.22 : 0, audio.ctx.currentTime, 0.2); };
+el("quiet").onchange = e => { showQuiet = e.target.checked; el("lg-quiet").hidden = !showQuiet; };
+el("choro").onchange = e => { showChoro = e.target.checked; el("lg-choro").hidden = !showChoro; baseDirty = true; };
+
+/* ---------- boot ---------- */
+readColors();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+new ResizeObserver(() => { resize(); drawSpark(); drawHours(); }).observe(cv);
+resize();
+setListener(LX, LY);
+requestAnimationFrame(frame);
+setTimeout(computeSamples, 300);
+})();
+</script>
