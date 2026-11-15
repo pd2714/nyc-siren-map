@@ -2,7 +2,7 @@
 
 在地图上选一个点，回放 2026 年 9 月 21–27 日这一周纽约救护车、消防车和警车从附近经过时的警笛声。
 
-Pick a spot on the map and replay one week (2026-09-21 to 27) of NYC ambulance, fire truck and police car runs, with synthesized sirens that fades, muffles and Doppler-shifts with distance.
+Pick a spot on the map and replay one week (2026-09-21 to 27) of NYC ambulance, fire truck and police car runs, with synthesized sirens that fade, muffle and Doppler-shift with distance.
 
 **在线访问 / Live:** https://pd2714.github.io/nyc-siren-map/
 
