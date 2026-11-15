@@ -16,6 +16,7 @@
   --siren: #d3263a;
   --strobe: #2457e6;
   --ok: #1f7a4d;
+  --fire: #e06a00;
   --f-display: "Barlow Condensed", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -23,13 +24,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0d1319; --panel: #111921; --land: #1f2b37; --water: #080c10; --ink: #e4ebf1;
-    --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a;
+    --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a; --fire: #ff9a3d;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0d1319; --panel: #111921; --land: #1f2b37; --water: #080c10; --ink: #e4ebf1;
-  --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a;
+  --muted: #8796a4; --line: #2a3644; --siren: #ff5466; --strobe: #5f8dff; --ok: #4cc38a; --fire: #ff9a3d;
   color-scheme: dark;
 }
 [hidden] { display: none !important; }
@@ -127,6 +128,15 @@ section { display: flex; flex-direction: column; gap: 10px; }
 #ticker .sev { font-family: var(--f-mono); font-size: 11px; padding: 0 5px; border-radius: 3px; color: #fff; background: var(--siren); margin-left: 4px; }
 #ticker .sev.s2 { background: color-mix(in srgb, var(--siren) 75%, var(--muted)); }
 #ticker .d { font-family: var(--f-mono); color: var(--muted); }
+#ticker .tag { font-size: 10.5px; font-weight: 600; margin-right: 5px; padding: 0 4px; border-radius: 3px; border: 1px solid currentColor; }
+.tag.t0 { color: var(--siren); } .tag.t1 { color: var(--fire); } .tag.t2 { color: var(--strobe); }
+.types { display: flex; gap: 6px; flex-wrap: wrap; }
+.types label { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 8px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: 12.5px; user-select: none; }
+.types input { position: absolute; opacity: 0; pointer-events: none; }
+.types label:has(input:not(:checked)) { opacity: .45; text-decoration: line-through; }
+.types label:has(input:focus-visible) { outline: 2px solid var(--strobe); outline-offset: 2px; }
+.mix { font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; margin: 0; }
+.mix b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
 #ticker .empty { color: var(--muted); grid-template-columns: 1fr; }
 
 /* settings */
@@ -165,7 +175,9 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
 .legend div { display: flex; align-items: center; gap: 8px; }
 .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .sw.go { background: var(--siren); box-shadow: 0 0 0 3px color-mix(in srgb, var(--siren) 25%, transparent); }
-.sw.tx { background: var(--panel); border: 3px solid var(--strobe); }
+.sw.tx { background: var(--panel); border: 3px solid var(--siren); }
+.sw.fire { border-radius: 2px; background: var(--fire); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fire) 25%, transparent); width: 11px; height: 11px; margin: 0.5px; }
+.sw.pol { border-radius: 1px; background: var(--strobe); transform: rotate(45deg) scale(.82); box-shadow: 0 0 0 3px color-mix(in srgb, var(--strobe) 25%, transparent); }
 .sw.quiet { width: 8px; height: 8px; margin: 2px; background: var(--muted); }
 .sw.h { border-radius: 0; background: none; position: relative; }
 .sw.h::before, .sw.h::after { content: ""; position: absolute; background: var(--ok); }
@@ -193,9 +205,9 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
 <div class="app">
   <aside class="panel">
     <header>
-      <div class="eyebrow">FDNY EMS 派车回放 · 2026 年 9 月 21–27 日</div>
+      <div class="eyebrow">FDNY · NYPD 出动回放 · 2026 年 9 月 21–27 日</div>
       <h1>纽约警笛<span class="x">听诊器</span></h1>
-      <p class="lede">在地图上点一个收听点，就能回放这一周纽约救护车从附近经过时的声音：距离越远越轻、越闷，开过身边时音调还会变。</p>
+      <p class="lede">在地图上点一个收听点，就能回放这一周纽约救护车、消防车和警车从附近经过时的声音：距离越远越轻、越闷，开过身边时音调还会变。</p>
     </header>
 
     <section aria-label="时间控制">
@@ -214,7 +226,7 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
           <button data-s="1">1×</button><button data-s="10" aria-pressed="true">10×</button><button data-s="60">60×</button><button data-s="300">300×</button>
         </div>
       </div>
-      <div class="tlhead"><span>拖动时间轴选时间</span><span>曲线：全市同时鸣笛的救护车数</span></div>
+      <div class="tlhead"><span>拖动时间轴选时间</span><span>曲线：全市同时鸣笛的车辆数</span></div>
       <div class="timeline">
         <canvas id="spark" aria-hidden="true"></canvas>
         <input id="scrub" type="range" min="0" max="604799" step="60" value="324000" aria-label="回放时间">
@@ -238,7 +250,7 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
       </div>
       <div class="readout">
         <div><b id="r-db">—</b><span>估计声级 dB(A)</span></div>
-        <div><b id="r-n">0</b><span>2 km 内鸣笛车</span></div>
+        <div><b id="r-n">0</b><span id="r-nlab">2 km 内鸣笛车</span></div>
         <div><b id="r-near">—</b><span id="r-dir">最近一辆</span></div>
       </div>
     </section>
@@ -247,27 +259,33 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
       <h2>这一周在这里 <small>300 m 内</small></h2>
       <div class="big" id="w-n">—<small>次鸣笛经过</small></div>
       <p class="statline" id="w-line">—</p>
+      <p class="mix" id="w-mix"></p>
       <canvas id="hours" aria-label="按小时统计的鸣笛经过次数"></canvas>
       <div class="pct"><span id="pct-l">和全市居民相比</span><div class="bar"><i id="pct-i" style="left:50%"></i></div><span class="num" id="pct-v">…</span></div>
     </section>
 
     <section>
-      <h2>附近的鸣笛派车 <small>3 km 内</small></h2>
+      <h2>附近的鸣笛出动 <small>3 km 内</small></h2>
       <ul id="ticker"><li class="empty">—</li></ul>
     </section>
 
     <section class="settings" aria-label="设置">
       <h2>设置</h2>
+      <div class="types" role="group" aria-label="显示和收听的车辆">
+        <label><input type="checkbox" data-type="0" checked><span class="sw go"></span>救护车</label>
+        <label><input type="checkbox" data-type="1" checked><span class="sw fire"></span>消防车</label>
+        <label><input type="checkbox" data-type="2" checked><span class="sw pol"></span>警车</label>
+      </div>
       <div class="vol"><label for="vol">音量</label><input id="vol" class="plain" type="range" min="0" max="1.5" step="0.01" value="0.9"></div>
       <label class="toggle"><span>隔着窗户听<small>双层玻璃大约挡掉 25 dB，高音挡得更多</small></span><input id="win" type="checkbox"></label>
       <label class="toggle"><span>城市底噪<small>持续的交通低频声</small></span><input id="amb" type="checkbox" checked></label>
       <label class="toggle"><span>显示未鸣笛的救护车</span><input id="quiet" type="checkbox" checked></label>
-      <label class="toggle"><span>派车密度底图<small>按邮编区，每平方公里每周派车次数</small></span><input id="choro" type="checkbox"></label>
+      <label class="toggle"><span>出动密度底图<small>按邮编区，每平方公里每周紧急出动次数（三类合计）</small></span><input id="choro" type="checkbox"></label>
     </section>
 
     <div class="note">
-      <p><b>哪些是真的：</b>每次派车的时间（派出、到场、送医、到院）、邮编、严重度和呼叫类型，来自 NYC Open Data 的 FDNY EMS Incident Dispatch Data（2026 年 9 月 21–27 日，共 <span id="n-inc">—</span> 次）。医院位置来自 NYC Facilities Database。</p>
-      <p><b>哪些是模拟的：</b>公开数据只精确到邮编，所以现场位置在邮编区内随机取点；出发点按真实行驶时长反推；路线按街道网格走 L 形；送往最近的医院。假设严重度 1–4 去现场时鸣笛，1–2 送医时鸣笛。警笛声为合成，声级用简单的点声源衰减模型估算。不含医院自营和私营救护车。</p>
+      <p><b>哪些是真的：</b>2026 年 9 月 21–27 日每次出动的时间和类型，来自 NYC Open Data：FDNY 救护车派车 <span id="n-ems">—</span> 次（EMS Incident Dispatch Data，含严重度、送医时间）、FDNY 消防出动 <span id="n-fire">—</span> 次（Fire Incident Dispatch Data，含派出车辆数）、NYPD 紧急出警 <span id="n-pol">—</span> 次（Calls for Service，带坐标）。医院和消防站位置也来自开放数据。</p>
+      <p><b>哪些是模拟的：</b>救护车和消防车的数据只精确到邮编，现场位置在邮编区内随机取点；警察数据有坐标，但我加了约 75 m 的随机偏移。救护车出发点按真实行驶时长反推，送医时挑一家距离与真实送医时长相符的医院；消防车从附近的消防站出发，一起事件最多画 6 辆。路线按街道网格走 L 形。鸣笛规则是假设：救护车严重度 1–4 去现场、1–2 送医时鸣笛；消防车除警报测试和树木倒伏外都鸣笛；警车只算紧急出警（正在发生的犯罪、协助急救、呼救、枪声、伤人车祸、火警）。警笛声为合成，声级用简单的点声源衰减模型估算。不含私营救护车。</p>
     </div>
   </aside>
 
@@ -280,11 +298,13 @@ input[type=range].plain { accent-color: var(--ink); width: 100%; }
       <button id="zhome" aria-label="回到收听点" title="回到收听点">◎</button>
     </div>
     <div class="ovl legend" id="legend">
-      <div><span class="sw go"></span>鸣笛 · 前往现场</div>
-      <div><span class="sw tx"></span>鸣笛 · 送往医院</div>
-      <div id="lg-quiet"><span class="sw quiet"></span>未鸣笛行驶</div>
+      <div><span class="sw go"></span>救护车 · 前往现场</div>
+      <div><span class="sw tx"></span>救护车 · 送往医院</div>
+      <div><span class="sw fire"></span>消防车</div>
+      <div><span class="sw pol"></span>警车</div>
+      <div id="lg-quiet"><span class="sw quiet"></span>未鸣笛的救护车</div>
       <div><span class="sw h"></span>医院</div>
-      <div id="lg-choro" hidden style="display:grid;gap:2px"><div class="ramp"></div><div class="rampl"><span id="ch-min"></span><span>每 km² 每周派车</span><span id="ch-max"></span></div></div>
+      <div id="lg-choro" hidden style="display:grid;gap:2px"><div class="ramp"></div><div class="rampl"><span id="ch-min"></span><span>每 km² 每周出动</span><span id="ch-max"></span></div></div>
     </div>
   </main>
 </div>
@@ -320,11 +340,16 @@ for (let i = 0; i < NL; i++) {
   LA[i] = Math.hypot(XC[i] - X0[i], YC[i] - Y0[i]); LB[i] = Math.hypot(X1[i] - XC[i], Y1[i] - YC[i]);
 }
 const isSiren = i => (META[i] & 1) === 1;
-const isTx = i => (META[i] & 2) === 2;
+const typeOf = i => (META[i] >> 23) & 3;                 // 0 ambulance, 1 fire apparatus, 2 police
+const isTx = i => typeOf(i) === 0 && (META[i] & 2) === 2; // ambulance heading to hospital
+const isLead = i => (META[i] & 2) === 0;                  // ambulance to scene, first-due fire unit, police car
 const sevOf = i => (META[i] >> 2) & 15;
-const ctOf = i => D.ct[(META[i] >> 6) & 255];
-const zipOf = i => META[i] >> 14;
-document.getElementById("n-inc").textContent = D.zipInc.reduce((a, b) => a + b, 0).toLocaleString("zh-CN");
+const ctOf = i => D.ct[(META[i] >> 6) & 511];
+const zipOf = i => (META[i] >> 15) & 255;
+const TYPE_ON = [true, true, true];
+const TYPE_NAME = ["救护", "消防", "警察"];
+for (const [id, v] of [["n-ems", D.counts.ems], ["n-fire", D.counts.fire], ["n-pol", D.counts.police]])
+  document.getElementById(id).textContent = v.toLocaleString("zh-CN");
 
 function upper(t) { let lo = 0, hi = NL; while (lo < hi) { const m = (lo + hi) >> 1; if (T0[m] <= t) lo = m + 1; else hi = m; } return lo; }
 function activeAt(t, out) {
@@ -393,7 +418,7 @@ function segDist(px, py, ax, ay, bx, by) {
 }
 function legDist(i, x, y) { return Math.min(segDist(x, y, X0[i], Y0[i], XC[i], YC[i]), segDist(x, y, XC[i], YC[i], X1[i], Y1[i])); }
 const R300 = 300 / Q;
-function weekStats(x, y, hours) {
+function weekStats(x, y, hours, byType) {
   let n = 0;
   for (let i = 0; i < NL; i++) {
     if (!(META[i] & 1)) continue;
@@ -401,14 +426,15 @@ function weekStats(x, y, hours) {
     if (x < Math.min(a, c, e) - R300 || x > Math.max(a, c, e) + R300) continue;
     const b = Y0[i], d = YC[i], f = Y1[i];
     if (y < Math.min(b, d, f) - R300 || y > Math.max(b, d, f) + R300) continue;
-    if (legDist(i, x, y) < R300) { n++; if (hours) hours[Math.floor((T0[i] % 86400) / 3600)]++; }
+    if (legDist(i, x, y) < R300) { n++; if (hours) hours[Math.floor((T0[i] % 86400) / 3600)]++; if (byType) byType[typeOf(i)]++; }
   }
   return n;
 }
 
 /* ---------- siren level model ---------- */
 // Source ~118 dB(A) at 3 m, spherical spreading plus urban excess attenuation (buildings, ground) ~1.2 dB / 100 m.
-const splAt = d => 118 - 20 * Math.log10(Math.max(d, 3) / 3) - 0.012 * d;
+const SRC_DB = [118, 121, 117];   // dB(A) at 3 m: ambulance electronic siren, fire truck rotor siren + horn, police siren
+const splAt = (d, type = 0) => SRC_DB[type] - 20 * Math.log10(Math.max(d, 3) / 3) - 0.012 * d;
 const AMBIENT_DB = 55;
 
 /* ---------- state ---------- */
@@ -425,7 +451,7 @@ const active = [];
 let C = {};
 function readColors() {
   const cs = getComputedStyle(document.documentElement);
-  for (const k of ["bg", "panel", "land", "water", "ink", "muted", "line", "siren", "strobe", "ok"]) C[k] = cs.getPropertyValue("--" + k).trim();
+  for (const k of ["bg", "panel", "land", "water", "ink", "muted", "line", "siren", "strobe", "ok", "fire"]) C[k] = cs.getPropertyValue("--" + k).trim();
   baseDirty = true; drawSpark(); drawHours();
 }
 
@@ -501,17 +527,19 @@ function drawFrame(nowMs) {
   if (baseDirty) drawBase();
   const g = cx; g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(base, 0, 0);
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const lx = sx(LX), ly = sy(LY);
+  const lx = sx(LX), ly = sy(LY), col = [C.siren, C.fire, C.strobe];
   // lines to audible voices
   for (const v of audio.voices.values()) {
     if (!v.pos) continue;
-    g.strokeStyle = C.siren; g.globalAlpha = Math.min(0.7, 0.08 + Math.sqrt(v.g) * 0.9); g.lineWidth = 1;
+    g.strokeStyle = col[v.type]; g.globalAlpha = Math.min(0.7, 0.08 + Math.sqrt(v.g) * 0.9); g.lineWidth = 1;
     g.beginPath(); g.moveTo(lx, ly); g.lineTo(sx(v.pos.x), sy(v.pos.y)); g.stroke();
   }
   g.globalAlpha = 1;
   const flash = nowMs / 1000;
   const rDot = Math.max(4, Math.min(6, view.s * 2.5));
   for (const i of active) {
+    const ty = typeOf(i);
+    if (!TYPE_ON[ty]) continue;
     legPos(i, simT, P);
     const x = sx(P.x), y = sy(P.y);
     if (x < -10 || y < -10 || x > W + 10 || y > H + 10) continue;
@@ -520,14 +548,19 @@ function drawFrame(nowMs) {
       g.fillStyle = C.muted; g.globalAlpha = 0.75; g.beginPath(); g.arc(x, y, rDot * 0.7, 0, 7); g.fill(); g.globalAlpha = 1;
       continue;
     }
-    const red = ((flash * 2.6 + (i % 7) * 0.13) % 1) < 0.5;
-    g.fillStyle = red ? C.siren : C.strobe; g.globalAlpha = 0.22;
+    const ph = ((flash * 2.6 + (i % 7) * 0.13) % 1) < 0.5;
+    g.fillStyle = ty === 2 ? (ph ? C.siren : C.strobe) : (ph ? col[ty] : C.strobe); g.globalAlpha = 0.22;
     g.beginPath(); g.arc(x, y, rDot * 2.6, 0, 7); g.fill(); g.globalAlpha = 1;
-    if (isTx(i)) {
-      g.fillStyle = C.panel; g.strokeStyle = C.strobe; g.lineWidth = 2.4;
-      g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill(); g.stroke();
+    if (ty === 0) {
+      if (isTx(i)) {
+        g.fillStyle = C.panel; g.strokeStyle = C.siren; g.lineWidth = 2.4;
+        g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill(); g.stroke();
+      } else { g.fillStyle = C.siren; g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill(); }
+    } else if (ty === 1) {
+      const r = rDot * 0.95; g.fillStyle = C.fire; g.fillRect(x - r, y - r, 2 * r, 2 * r);
     } else {
-      g.fillStyle = C.siren; g.beginPath(); g.arc(x, y, rDot, 0, 7); g.fill();
+      const r = rDot * 1.3; g.fillStyle = C.strobe;
+      g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r, y); g.lineTo(x, y + r); g.lineTo(x - r, y); g.closePath(); g.fill();
     }
   }
   // listener
@@ -595,8 +628,9 @@ function setListener(x, y) {
   const label = z.label.split(",")[0];
   document.getElementById("hint-zip").textContent = "邮编 " + label;
   document.getElementById("where").textContent = "邮编 " + label;
-  HOURS.fill(0);
-  const n = weekStats(LX, LY, HOURS);
+  HOURS.fill(0); BYTYPE.fill(0);
+  const n = weekStats(LX, LY, HOURS, BYTYPE);
+  document.getElementById("w-mix").innerHTML = `<span>救护车 <b>${BYTYPE[0]}</b></span><span>消防车 <b>${BYTYPE[1]}</b></span><span>警车 <b>${BYTYPE[2]}</b></span>`;
   myCount = n;
   document.getElementById("w-n").firstChild.nodeValue = n.toLocaleString("zh-CN");
   let pk = 0; for (let h = 1; h < 24; h++) if (HOURS[h] > HOURS[pk]) pk = h;
@@ -612,7 +646,7 @@ function flashHint(msg) {
   el.textContent = msg; clearTimeout(hintTimer);
   hintTimer = setTimeout(() => { el.innerHTML = old; }, 1800);
 }
-const HOURS = new Array(24).fill(0); let myCount = 0;
+const HOURS = new Array(24).fill(0), BYTYPE = [0, 0, 0]; let myCount = 0;
 function drawHours() {
   const c = document.getElementById("hours"); if (!c || !C.ink) return;
   const r = c.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
@@ -652,11 +686,12 @@ function updatePct() {
 }
 
 /* ---------- timeline sparkline ---------- */
-const BINS = 7 * 96, SPARK = new Float32Array(BINS);
+const BINS = 7 * 96, SPARK = [new Float32Array(BINS), new Float32Array(BINS), new Float32Array(BINS)];
 for (let i = 0; i < NL; i++) {
   if (!(META[i] & 1)) continue;
+  const S = SPARK[typeOf(i)];
   const a = Math.floor(T0[i] / 900), b = Math.min(BINS - 1, Math.floor((T0[i] + DUR[i]) / 900));
-  for (let k = a; k <= b; k++) if (k >= 0 && k < BINS) SPARK[k] += 1;
+  for (let k = a; k <= b; k++) if (k >= 0 && k < BINS) S[k] += 1;
 }
 const spark = document.getElementById("spark"), scrub = document.getElementById("scrub");
 function drawSpark() {
@@ -664,14 +699,18 @@ function drawSpark() {
   const r = spark.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
   spark.width = r.width * d; spark.height = r.height * d;
   const g = spark.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
-  const max = Math.max(...SPARK), w = r.width, h = r.height;
-  g.beginPath(); g.moveTo(0, h);
-  for (let k = 0; k < BINS; k++) g.lineTo(k / BINS * w, h - SPARK[k] / max * (h - 4));
-  g.lineTo(w, h); g.closePath();
-  g.fillStyle = C.siren; g.globalAlpha = 0.18; g.fill(); g.globalAlpha = 1;
-  g.strokeStyle = C.siren; g.lineWidth = 1; g.beginPath();
-  for (let k = 0; k < BINS; k++) g[k ? "lineTo" : "moveTo"](k / BINS * w, h - SPARK[k] / max * (h - 4));
-  g.stroke();
+  const w = r.width, h = r.height;
+  let max = 1; for (let k = 0; k < BINS; k++) max = Math.max(max, SPARK[0][k] + SPARK[1][k] + SPARK[2][k]);
+  const cum = new Float32Array(BINS), Y = v => h - v / max * (h - 3), X = k => k / (BINS - 1) * w;
+  for (const [t, color] of [[0, C.siren], [1, C.fire], [2, C.strobe]]) {
+    const prev = cum.slice();
+    for (let k = 0; k < BINS; k++) cum[k] += SPARK[t][k];
+    g.beginPath(); g.moveTo(X(0), Y(cum[0]));
+    for (let k = 1; k < BINS; k++) g.lineTo(X(k), Y(cum[k]));
+    for (let k = BINS - 1; k >= 0; k--) g.lineTo(X(k), Y(prev[k]));
+    g.closePath(); g.fillStyle = color; g.globalAlpha = 0.55; g.fill();
+  }
+  g.globalAlpha = 1;
 }
 let scrubbing = false;
 scrub.addEventListener("pointerdown", () => { scrubbing = true; });
@@ -718,42 +757,66 @@ const audio = {
     if (!this.ctx) return;
     this.master.gain.setTargetAtTime(on ? this.vol : 0, this.ctx.currentTime, 0.12);
   },
-  makeVoice(i) {
-    const ctx = this.ctx, v = { i, mode: "wail", next: 0, phase: Math.random() * 4, base: 640 * (0.94 + ((i * 2654435761) % 1000) / 1000 * 0.12), g: 0 };
-    v.o1 = ctx.createOscillator(); v.o1.type = "sawtooth";
-    v.o2 = ctx.createOscillator(); v.o2.type = "square"; v.o2.detune.value = 7;
-    const m2 = ctx.createGain(); m2.gain.value = 0.35;
-    v.hp = ctx.createBiquadFilter(); v.hp.type = "highpass"; v.hp.frequency.value = 380;
-    v.horn = ctx.createBiquadFilter(); v.horn.type = "peaking"; v.horn.frequency.value = 1450; v.horn.Q.value = 1.1; v.horn.gain.value = 8;
+  osc(type, f) { const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = f; o.start(); return o; },
+  makeVoice(i, type) {
+    const ctx = this.ctx, jitter = (((i * 2654435761) >>> 0) % 1000) / 1000, t = ctx.currentTime;
+    const v = { i, type, mode: "wail", next: 0, phase: Math.random() * 4, g: 0, last: t, up: true, nextHorn: t + 1 + Math.random() * 5 };
+    v.base = type === 1 ? 260 : type === 2 ? 680 * (0.95 + jitter * 0.1) : 640 * (0.94 + jitter * 0.12);
+    v.f = v.base;
+    v.o1 = this.osc("sawtooth", v.base);
+    // second oscillator: a detuned square for the electronic sirens, the low "rumbler" speaker for police
+    v.o2 = this.osc(type === 2 ? "sine" : "square", v.base); if (type !== 2) v.o2.detune.value = 7;
+    v.m2 = ctx.createGain(); v.m2.gain.value = type === 2 ? 0 : type === 1 ? 0.5 : 0.35;
+    v.hp = ctx.createBiquadFilter(); v.hp.type = "highpass"; v.hp.frequency.value = type === 2 ? 90 : type === 1 ? 140 : 380;
+    v.horn = ctx.createBiquadFilter(); v.horn.type = "peaking"; v.horn.Q.value = 1.1; v.horn.gain.value = 8;
+    v.horn.frequency.value = type === 1 ? 900 : type === 2 ? 1600 : 1450;
     v.lp = ctx.createBiquadFilter(); v.lp.type = "lowpass";
     v.amp = ctx.createGain(); v.amp.gain.value = 0;
     v.pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
     v.dg = ctx.createGain(); v.wg = ctx.createGain();
-    v.o1.connect(v.hp); v.o2.connect(m2); m2.connect(v.hp); v.hp.connect(v.horn); v.horn.connect(v.lp); v.lp.connect(v.amp);
+    v.o1.connect(v.hp); v.o2.connect(v.m2); v.m2.connect(v.hp); v.hp.connect(v.horn); v.horn.connect(v.lp); v.lp.connect(v.amp);
+    if (type === 1) {          // fire apparatus air horn: two low reeds, off until a blast is scheduled
+      v.h1 = this.osc("sawtooth", 233); v.h2 = this.osc("sawtooth", 311);
+      const hl = ctx.createBiquadFilter(); hl.type = "lowpass"; hl.frequency.value = 2200;
+      v.hg = ctx.createGain(); v.hg.gain.value = 0;
+      v.h1.connect(hl); v.h2.connect(hl); hl.connect(v.hg); v.hg.connect(v.hp);
+    }
     const out = v.pan || v.amp; if (v.pan) v.amp.connect(v.pan);
     out.connect(v.dg); out.connect(v.wg); v.dg.connect(this.dry); v.wg.connect(this.wet);
-    v.o1.start(); v.o2.start();
     return v;
   },
   killVoice(v) {
     const t = this.ctx.currentTime;
     v.amp.gain.setTargetAtTime(0, t, 0.15);
-    v.o1.stop(t + 1); v.o2.stop(t + 1);
+    for (const o of [v.o1, v.o2, v.h1, v.h2]) if (o) o.stop(t + 1);
   },
   resetVoices() { if (!this.ctx) return; for (const v of this.voices.values()) this.killVoice(v); this.voices.clear(); },
   sirenHz(v, tr) {
-    if (tr > v.next) {             // operators switch between wail and yelp, especially near intersections
-      v.mode = Math.random() < 0.62 ? "wail" : "yelp";
-      v.next = tr + (v.mode === "wail" ? 6 + Math.random() * 8 : 2.5 + Math.random() * 4);
+    const dt = Math.max(0, Math.min(0.1, tr - v.last)); v.last = tr;
+    if (v.type === 1) {        // mechanical rotor siren: the driver holds the pedal to spin up, then lets it coast
+      if (tr > v.next) { v.up = !v.up; v.next = tr + (v.up ? 2 + Math.random() * 2.5 : 3 + Math.random() * 4); }
+      v.f = v.up ? v.f + (1150 - v.f) * (1 - Math.exp(-dt / 0.9)) : 260 + (v.f - 260) * Math.exp(-dt / 2.2);
+      return v.f;
+    }
+    if (tr > v.next) {         // operators switch tones, especially near intersections
+      const r = Math.random();
+      v.mode = v.type === 2 ? (r < 0.35 ? "wail" : r < 0.85 ? "yelp" : "phaser") : (r < 0.62 ? "wail" : "yelp");
+      v.next = tr + (v.mode === "wail" ? 6 + Math.random() * 8 : v.mode === "phaser" ? 1.5 + Math.random() * 2 : 2.5 + Math.random() * 4);
     }
     const lo = v.base, hi = v.base * 2.1;
     if (v.mode === "wail") {
-      const P = 4.4, ph = ((tr + v.phase) % P) / P;
+      const P = v.type === 2 ? 3.6 : 4.4, ph = ((tr + v.phase) % P) / P;
       const u = ph < 0.42 ? Math.sin(ph / 0.42 * Math.PI / 2) : 1 - Math.pow((ph - 0.42) / 0.58, 1.3);
       return lo + (hi - lo) * u;
     }
-    const P = 0.3, ph = ((tr + v.phase) % P) / P;
+    const P = v.mode === "phaser" ? 0.09 : v.type === 2 ? 0.26 : 0.3, ph = ((tr + v.phase) % P) / P;
     return lo + (hi - lo) * (ph < 0.85 ? ph / 0.85 : 1 - (ph - 0.85) / 0.15);
+  },
+  hornBlast(v, t) {
+    const g = v.hg.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    let k = t;
+    for (const [on, off] of [[0.45, 0.2], [0.45, 0.2], [1.3, 0]]) { g.setTargetAtTime(0.6, k, 0.015); g.setTargetAtTime(0, k + on, 0.03); k += on + off; }
+    v.nextHorn = t + 7 + Math.random() * 9;
   },
   update(cands) {
     if (!this.ctx) return;
@@ -761,11 +824,19 @@ const audio = {
     for (const [i, v] of this.voices) if (!want.has(i)) { this.killVoice(v); this.voices.delete(i); }
     for (const c of cands) {
       let v = this.voices.get(c.i);
-      if (!v) { v = this.makeVoice(c.i); this.voices.set(c.i, v); }
+      if (!v) { v = this.makeVoice(c.i, c.type); this.voices.set(c.i, v); }
       v.pos = { x: c.x, y: c.y };
       const g = Math.min(1, Math.pow(10, (c.spl - 100) / 20)); v.g = g;
       const f = this.sirenHz(v, t) * c.doppler;
-      v.o1.frequency.setTargetAtTime(f, t, 0.006); v.o2.frequency.setTargetAtTime(f, t, 0.006);
+      v.o1.frequency.setTargetAtTime(f, t, 0.006);
+      if (v.type === 2) {
+        v.o2.frequency.setTargetAtTime(f * 0.25, t, 0.006);
+        v.m2.gain.setTargetAtTime(v.mode === "wail" ? 0 : 0.9, t, 0.05);
+      } else v.o2.frequency.setTargetAtTime(f, t, 0.006);
+      if (v.type === 1) {
+        v.h1.frequency.setTargetAtTime(233 * c.doppler, t, 0.01); v.h2.frequency.setTargetAtTime(311 * c.doppler, t, 0.01);
+        if (t > v.nextHorn && c.d < 900) this.hornBlast(v, t);
+      }
       v.amp.gain.setTargetAtTime(g * 0.5, t, 0.08);
       v.lp.frequency.setTargetAtTime(600 + 9000 * Math.exp(-c.d / 450), t, 0.08);
       if (v.pan) v.pan.pan.setTargetAtTime(c.pan, t, 0.08);
@@ -776,45 +847,50 @@ const audio = {
 };
 
 /* ---------- live readout + ticker ---------- */
-const MAXV = 8, R_AUDIBLE = 2500 / Q;
+const MAXV = 10, R_AUDIBLE = 2500 / Q;
 function listen() {
-  const cands = [];
+  const cands = [], nt = [0, 0, 0];
   let n2k = 0, nearest = null;
   for (const i of active) {
     if (!isSiren(i)) continue;
+    const ty = typeOf(i);
+    if (!TYPE_ON[ty]) continue;
     legPos(i, simT, P);
     const dx = (P.x - LX) * Q, dy = (P.y - LY) * Q, d = Math.max(3, Math.hypot(dx, dy));
     if (d > R_AUDIBLE * Q) continue;
-    if (d <= 2000) n2k++;
+    if (d <= 2000) { n2k++; nt[ty]++; }
     const vr = (P.ux * dx + P.uy * dy) / d * P.v;   // + = moving away
-    const c = { i, x: P.x, y: P.y, d, spl: splAt(d), pan: Math.max(-1, Math.min(1, dx / Math.max(d, 40))) * 0.85, doppler: 343 / (343 + vr), vr };
+    const c = { i, type: ty, x: P.x, y: P.y, d, spl: splAt(d, ty), pan: Math.max(-1, Math.min(1, dx / Math.max(d, 40))) * 0.85, doppler: 343 / (343 + vr), vr };
     cands.push(c);
     if (!nearest || d < nearest.d) nearest = c;
   }
   cands.sort((a, b) => b.spl - a.spl);
-  const top = cands.slice(0, MAXV);
-  audio.update(running ? top : []);
+  audio.update(running ? cands.slice(0, MAXV) : []);
   // estimated level at listener
   let e = Math.pow(10, AMBIENT_DB / 10);
   for (const c of cands) e += Math.pow(10, c.spl / 10);
   let db = 10 * Math.log10(e); if (audio.win) db -= 25;
-  return { db, n2k, nearest };
+  return { db, n2k, nt, nearest };
 }
 const fmtT = t => { const s = Math.floor(t % 86400); return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, "0")).join(":"); };
+const fmtD = d => d < 1000 ? Math.round(d / 10) * 10 + " m" : (d / 1000).toFixed(1) + " km";
+const ctLabel = ct => /^[FP]:/.test(ct) ? ct.slice(2) : (CT[ct] || "其他");
 let lastTick = -1;
 function updateTicker() {
   const ul = document.getElementById("ticker"), items = [];
   const R = 3000 / Q;
-  for (let i = upper(simT) - 1; i >= 0 && T0[i] > simT - 4 * 3600 && items.length < 7; i--) {
-    if (!isSiren(i) || isTx(i)) continue;
+  for (let i = upper(simT) - 1; i >= 0 && T0[i] > simT - 4 * 3600 && items.length < 8; i--) {
+    if (!isSiren(i) || !isLead(i) || !TYPE_ON[typeOf(i)]) continue;
     const d = Math.hypot(X1[i] - LX, Y1[i] - LY);
     if (d > R) continue;
     items.push({ i, d: d * Q });
   }
-  if (!items.length) { ul.innerHTML = '<li class="empty">过去 4 小时，3 km 内没有鸣笛派车。</li>'; return; }
+  if (!items.length) { ul.innerHTML = '<li class="empty">过去 4 小时，3 km 内没有鸣笛出动。</li>'; return; }
   ul.innerHTML = items.map(({ i, d }) => {
-    const ct = ctOf(i), sev = sevOf(i), z = ZIPS[zipOf(i)];
-    return `<li><span class="t">${fmtT(T0[i]).slice(0, 5)}</span><span class="what"><span class="code">${ct}</span>${CT[ct] || "其他"}<span class="sev ${sev > 2 ? "s2" : ""}" title="FDNY 严重度，1 最危急">${sev}</span></span><span class="d">${d < 1000 ? Math.round(d / 10) * 10 + " m" : (d / 1000).toFixed(1) + " km"}</span></li>`;
+    const ty = typeOf(i), ct = ctOf(i), sev = sevOf(i);
+    const code = ty === 0 ? `<span class="code">${ct}</span>` : "";
+    const badge = ty === 0 ? `<span class="sev ${sev > 2 ? "s2" : ""}" title="FDNY 严重度，1 最危急">${sev}</span>` : "";
+    return `<li><span class="t">${fmtT(T0[i]).slice(0, 5)}</span><span class="what"><span class="tag t${ty}">${TYPE_NAME[ty]}</span>${code}${ctLabel(ct)}${badge}</span><span class="d">${fmtD(d)}</span></li>`;
   }).join("");
 }
 
@@ -838,6 +914,7 @@ function frame(now) {
     el("r-db").textContent = Math.round(r.db);
     el("meterbar").style.width = Math.max(0, Math.min(100, (r.db - 30) / 70 * 100)) + "%";
     el("r-n").textContent = r.n2k;
+    el("r-nlab").textContent = r.n2k ? `2 km 内 · 救${r.nt[0]} 消${r.nt[1]} 警${r.nt[2]}` : "2 km 内鸣笛车";
     if (r.nearest) {
       el("r-near").textContent = r.nearest.d < 1000 ? Math.round(r.nearest.d / 10) * 10 + " m" : (r.nearest.d / 1000).toFixed(1) + " km";
       el("r-dir").textContent = r.nearest.vr < -0.5 ? "最近一辆 · 正在靠近" : r.nearest.vr > 0.5 ? "最近一辆 · 正在远离" : "最近一辆";
@@ -882,6 +959,10 @@ el("win").onchange = e => { audio.win = e.target.checked; audio.applyWin(); };
 el("amb").onchange = e => { audio.amb = e.target.checked; if (audio.ctx) audio.ambG.gain.setTargetAtTime(audio.amb ? 0.22 : 0, audio.ctx.currentTime, 0.2); };
 el("quiet").onchange = e => { showQuiet = e.target.checked; el("lg-quiet").hidden = !showQuiet; };
 el("choro").onchange = e => { showChoro = e.target.checked; el("lg-choro").hidden = !showChoro; baseDirty = true; };
+
+document.querySelectorAll(".types input").forEach(inp => inp.addEventListener("change", () => {
+  TYPE_ON[+inp.dataset.type] = inp.checked; lastTick = -1;
+}));
 
 /* ---------- boot ---------- */
 readColors();
